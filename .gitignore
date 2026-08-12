@@ -1,0 +1,15 @@
+.Rhistory
+.RData
+.Rapp.history
+.Rproj.user/
+*.Rproj
+*.tar.gz
+*.o
+*.so
+*.dll
+*.dylib
+*.Rbuildignore_check
+.DS_Store
+inst/doc
+vignettes/*.html
+vignettes/*.R

@@ -1,0 +1,109 @@
+---
+title: "CDRscope: Interpretable TCR/BCR Repertoire Analysis"
+author: "CDRscope Authors"
+date: "`r Sys.Date()`"
+output:
+  rmarkdown::html_vignette:
+    toc: true
+    fig_caption: yes
+vignette: >
+  %\VignetteIndexEntry{CDRscope Tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width = 6, fig.height = 4.2, fig.align = "center",
+                      message = FALSE, warning = FALSE)
+```
+
+## Overview
+
+`CDRscope` integrates the six research directions of immune-repertoire
+biology into a single interpretable workflow:
+
+1. **Input** — `ReadRepertoire()` / `fetch_vdjdb()` / `fetch_toy_data()`
+2. **QC** — `QCRepertoire()` / `NormalizeRepertoire()`
+3. **Features** — `ComputeFeatures()` (six concept modules)
+4. **Embedding** — `ConceptBottleneckEmbed()` (concept bottleneck)
+5. **Classification** — `DiseaseClassify()` (linear + SHAP)
+6. **Markers** — `FindMarkers()` (statistical + sequence)
+
+Every step preserves biological semantics, so the disease-separation result is
+traceable back to interpretable concept axes.
+
+```{r load}
+library(CDRscope)
+```
+
+## 1. Build a toy repertoire
+
+```{r toy}
+obj <- fetch_toy_data(n_samples = 40, n_clones_per_sample = 300, seed = 1)
+obj
+```
+
+## 2. QC and normalise
+
+```{r qc}
+obj <- QCRepertoire(obj, min_len = 6, max_len = 30)
+obj <- NormalizeRepertoire(obj, method = "freq")
+obj@misc$qc
+```
+
+## 3. Compute six-concept features
+
+```{r features}
+obj <- ComputeFeatures(obj)
+dim(obj@features)
+obj@feature_modules
+```
+
+## 4. Concept-bottleneck embedding
+
+```{r embed}
+obj <- ConceptBottleneckEmbed(obj, method = "pca", ndim = 10)
+DimPlot(obj)
+```
+
+## 5. Disease classification with attribution
+
+```{r classify}
+obj <- DiseaseClassify(obj, method = "logistic", use_shap = TRUE)
+obj@classification$train_accuracy
+SHAPPlot(obj)
+```
+
+## 6. Biomarker discovery
+
+```{r markers}
+obj <- FindMarkers(obj, level = "both")
+head(obj@markers$statistical_sig, 8)
+head(obj@markers$sequence_sig, 8)
+```
+
+## 7. Visualisation gallery
+
+```{r vis1}
+FeaturePlot(obj, "convergence")
+```
+
+```{r vis2}
+VlnPlot(obj, "shannon")
+```
+
+```{r vis3}
+FeatureHeatmap(obj)
+```
+
+```{r vis4, fig.height=4}
+MotifLogo(obj, group = "infection", top_n = 15)
+```
+
+## Interpretability
+
+Each plot maps back to a named concept axis: the concept-bottleneck layer
+forces every disease decision through the six interpretable modules, and SHAP
+attributes the decision to specific axes. Statistical markers localise *which
+mechanism is perturbed*; sequence markers give *concrete CDR3 motifs* as
+candidate biomarkers.
