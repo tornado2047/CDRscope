@@ -1,0 +1,98 @@
+<svg viewBox="0 0 680 425" width="100%" role="img" aria-labelledby="pp ppd">
+<title id="pp">CDRscope 算法 Pipeline 示意图</title>
+<desc id="ppd">CDRscope 可解释 TCR/BCR 分析的横向 pipeline：输入→质控→六维特征→概念瓶颈嵌入与分类→生物标记，含六概念模块展开与可解释性保障</desc>
+<defs>
+<marker id="ap" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+<path d="M1 1L9 5L1 9" fill="none" stroke="context-stroke" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+</marker>
+</defs>
+
+<text x="340" y="24" text-anchor="middle" font-size="15" font-weight="500" fill="#2C2C2A">CDRscope 算法 Pipeline</text>
+<text x="340" y="44" text-anchor="middle" font-size="13" fill="#5F5E5A">可解释 TCR/BCR 分析 · 六概念瓶颈架构</text>
+
+<rect x="20" y="70" width="116" height="70" rx="8" fill="#E1F5EE" stroke="#1D9E75" stroke-width="0.5"/>
+<rect x="20" y="70" width="116" height="4" rx="2" fill="#1D9E75"/>
+<text x="78" y="88" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#085041">① 输入</text>
+<text x="78" y="106" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56" font-family="monospace">ReadRepertoire</text>
+<text x="78" y="124" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">junction-aa · 七链</text>
+
+<rect x="152" y="70" width="116" height="70" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+<rect x="152" y="70" width="116" height="4" rx="2" fill="#888780"/>
+<text x="210" y="88" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#444441">② 质控对齐</text>
+<text x="210" y="106" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A" font-family="monospace">QCRepertoire</text>
+<text x="210" y="124" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#5F5E5A">CDR3 提取·过滤</text>
+
+<rect x="284" y="70" width="116" height="70" rx="8" fill="#E6F1FB" stroke="#378ADD" stroke-width="0.5"/>
+<rect x="284" y="70" width="116" height="4" rx="2" fill="#378ADD"/>
+<text x="342" y="88" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#0C447C">③ 六维特征</text>
+<text x="342" y="106" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#185FA5" font-family="monospace">ComputeFeatures</text>
+<text x="342" y="124" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#185FA5">六概念轴 ↓</text>
+
+<rect x="416" y="70" width="116" height="70" rx="8" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<rect x="416" y="70" width="116" height="4" rx="2" fill="#534AB7"/>
+<text x="474" y="88" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#3C3489">④ 嵌入分类</text>
+<text x="474" y="106" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#534AB7" font-family="monospace">ConceptBottleneck</text>
+<text x="474" y="124" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#534AB7">logistic + SHAP</text>
+
+<rect x="548" y="70" width="116" height="70" rx="8" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<rect x="548" y="70" width="116" height="4" rx="2" fill="#EF9F27"/>
+<text x="606" y="88" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#633806">⑤ 生物标记</text>
+<text x="606" y="106" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#854F0B" font-family="monospace">FindMarkers</text>
+<text x="606" y="124" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#854F0B">统计 + 序列</text>
+
+<path d="M136 105 L152 105" fill="none" stroke="#5F5E5A" stroke-width="1.4" marker-end="url(#ap)"/>
+<path d="M268 105 L284 105" fill="none" stroke="#5F5E5A" stroke-width="1.4" marker-end="url(#ap)"/>
+<path d="M400 105 L416 105" fill="none" stroke="#5F5E5A" stroke-width="1.4" marker-end="url(#ap)"/>
+<path d="M532 105 L548 105" fill="none" stroke="#5F5E5A" stroke-width="1.4" marker-end="url(#ap)"/>
+
+<path d="M342 140 L342 152" fill="none" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="3 2"/>
+
+<rect x="120" y="152" width="440" height="120" rx="10" fill="#F6FBFF" stroke="#85B7EB" stroke-width="0.5" stroke-dasharray="3 2"/>
+<text x="340" y="168" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#0C447C">六概念轴（每维 = 可解释概念轴）</text>
+
+<rect x="135" y="178" width="130" height="42" rx="6" fill="#E6F1FB" stroke="#85B7EB" stroke-width="0.5"/>
+<rect x="135" y="178" width="3" height="42" fill="#378ADD"/>
+<text x="202" y="194" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#0C447C">① 抗原解码</text>
+<text x="202" y="210" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#185FA5">motif 频谱</text>
+
+<rect x="275" y="178" width="130" height="42" rx="6" fill="#E1F5EE" stroke="#5DCAA5" stroke-width="0.5"/>
+<rect x="275" y="178" width="3" height="42" fill="#1D9E75"/>
+<text x="342" y="194" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#085041">② 空间统计</text>
+<text x="342" y="210" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#0F6E56">Shannon · power-law</text>
+
+<rect x="415" y="178" width="130" height="42" rx="6" fill="#EAF3DE" stroke="#97C459" stroke-width="0.5"/>
+<rect x="415" y="178" width="3" height="42" fill="#639922"/>
+<text x="482" y="194" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#27500A">③ 选择印记</text>
+<text x="482" y="210" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#3B6D11">N 插入 · 电荷</text>
+
+<rect x="135" y="226" width="130" height="42" rx="6" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<rect x="135" y="226" width="3" height="42" fill="#D85A30"/>
+<text x="202" y="242" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#712B13">④ 疾病扰动</text>
+<text x="202" y="258" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#993C1D">收敛 · 坍缩</text>
+
+<rect x="275" y="226" width="130" height="42" rx="6" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<rect x="275" y="226" width="3" height="42" fill="#EF9F27"/>
+<text x="342" y="242" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#633806">⑤ 历史谱系</text>
+<text x="342" y="258" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#854F0B">SHM (BCR)</text>
+
+<rect x="415" y="226" width="130" height="42" rx="6" fill="#EEEDFE" stroke="#AFA9EC" stroke-width="0.5"/>
+<rect x="415" y="226" width="3" height="42" fill="#534AB7"/>
+<text x="482" y="242" text-anchor="middle" dominant-baseline="central" font-size="11" font-weight="500" fill="#3C3489">⑥ 跨链耦合</text>
+<text x="482" y="258" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#534AB7">配对多样性</text>
+
+<path d="M560 272 L560 105 L548 105" fill="none" stroke="#378ADD" stroke-width="0.8" stroke-dasharray="3 2"/>
+
+<rect x="20" y="288" width="644" height="30" rx="8" fill="#F1EFE8" stroke="#B4B2A9" stroke-width="0.5"/>
+<text x="342" y="303" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#444441">可解释性保障：语义特征工程 · 概念瓶颈约束 · 线性可解 + SHAP 归因 · 双层标记互证</text>
+
+<rect x="20" y="330" width="310" height="80" rx="8" fill="#FAECE7" stroke="#F0997B" stroke-width="0.5"/>
+<text x="175" y="350" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#712B13">输出 ① 疾病分离</text>
+<text x="175" y="370" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#993C1D">概念空间中疾病可分</text>
+<text x="175" y="388" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#993C1D">决策边界追溯至概念轴</text>
+
+<rect x="354" y="330" width="310" height="80" rx="8" fill="#FAEEDA" stroke="#FAC775" stroke-width="0.5"/>
+<text x="509" y="350" text-anchor="middle" dominant-baseline="central" font-size="12" font-weight="500" fill="#633806">输出 ② 生物标记</text>
+<text x="509" y="370" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#854F0B">统计级：特征差异 + FDR</text>
+<text x="509" y="388" text-anchor="middle" dominant-baseline="central" font-size="11" fill="#854F0B">序列级：motif 富集 + 共享克隆型</text>
+
+</svg>

@@ -9,6 +9,8 @@ separates diseases with explainable classifiers (linear / tree + SHAP), and
 discovers biomarkers at both statistical and sequence levels — all wrapped in
 a single `CDRobject` carried through a Seurat-style piped workflow.
 
+![CDRscope pipeline](docs/figures/pipeline.svg)
+
 ```
 ReadRepertoire → QCRepertoire → ComputeFeatures → ConceptBottleneckEmbed
               → DiseaseClassify → FindMarkers
