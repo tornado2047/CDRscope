@@ -1,27 +1,30 @@
 Package: CDRscope
 Type: Package
-Title: Interpretable TCR/BCR Repertoire Analysis via Six-Concept Bottleneck
-Version: 0.1.0
-Date: 2026-08-12
+Title: Interpretable TCR/BCR Repertoire Analysis with Enhanced Features and
+    Multi-Chain Support
+Version: 2.0.0
+Date: 2026-08-14
 Authors@R: person("CDRscope", "Author", email = "cdrscope@example.com", role = c("aut", "cre"))
 Author: CDRscope Author
 Maintainer: CDRscope Author <cdrscope@example.com>
 Description: An interpretable analysis framework for TCR/BCR immune repertoires.
-    Integrates six research directions (antigen decoding, repertoire statistics,
-    selection imprint, disease perturbation, history/lineage, chain pairing) into
-    six interpretable concept axes, builds a concept-bottleneck embedding space,
-    separates diseases with explainable classifiers (linear/tree + SHAP), and
-    discovers biomarkers at both statistical and sequence levels. Designed in the
-    style of Seurat: a single S4 object carrying clones, features, embeddings and
-    markers through a piped workflow (ReadRepertoire -> QCRepertoire ->
-    ComputeFeatures -> ConceptBottleneckEmbed -> DiseaseClassify -> FindMarkers).
+    v2.0 adds multi-chain support (single/paired/all), RA-enhanced feature
+    engineering (65 features across 11 modules), advanced classifiers (Random
+    Forest, LASSO, XGBoost, Ensemble), and ESM-2 protein language model embedding
+    with parametric UMAP. Integrates six research directions into interpretable
+    concept axes, builds a concept-bottleneck embedding space, separates diseases
+    with explainable classifiers, and discovers biomarkers at both statistical
+    and sequence levels. Designed in the style of Seurat: a single S4 object
+    carrying clones, features, embeddings and markers through a piped workflow.
+URL: https://github.com/tornado2047/CDRscope
+BugReports: https://github.com/tornado2047/CDRscope/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 Depends: R (>= 4.1.0), ggplot2
 Imports: methods, stats, utils, grDevices
-Suggests: httr, jsonlite, entropy, poweRlaw, RColorBrewer, iml,
-    knitr, rmarkdown, testthat
+Suggests: httr, jsonlite, entropy, poweRlaw, RColorBrewer, iml, randomForest,
+    glmnet, xgboost, knitr, rmarkdown, testthat
 VignetteBuilder: knitr
 RoxygenNote: 7.3.1
 Roxygen: list(markdown = TRUE)

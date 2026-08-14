@@ -1,107 +1,149 @@
-# CDRscope
+# CDRscope v2.0
 
-**Interpretable TCR/BCR repertoire analysis via a six-concept bottleneck.**
+**Interpretable TCR/BCR repertoire analysis with enhanced features, multi-chain support, and deep-learning embeddings.**
 
 `CDRscope` implements the five-layer interpretable algorithm architecture for
-TCR/BCR immune repertoires. It compiles six research directions into six
-interpretable concept axes, builds a concept-bottleneck embedding space,
-separates diseases with explainable classifiers (linear / tree + SHAP), and
-discovers biomarkers at both statistical and sequence levels — all wrapped in
-a single `CDRobject` carried through a Seurat-style piped workflow.
-
-![CDRscope pipeline](docs/figures/pipeline.svg)
+TCR/BCR immune repertoires. **v2.0** adds:
+- **Multi-chain support** — single chain, TRA+TRB paired, or all chains joint
+- **Enhanced feature engineering** — 11 modules, 65 features with RA-specific motifs
+- **Advanced classifiers** — Random Forest, LASSO, XGBoost, Ensemble
+- **ESM-2 embedding** — protein language model embedding + parametric UMAP
 
 ```
-ReadRepertoire → QCRepertoire → ComputeFeatures → ConceptBottleneckEmbed
-              → DiseaseClassify → FindMarkers
+run_CDRscope(data_dir, chain = "paired")   # one-line unified entry
+
+# Or the classic piped workflow:
+ReadRepertoire → QCRepertoire → ComputeFeatures → ComputeFeaturesRA
+              → ConceptBottleneckEmbed → DiseaseClassify → FindMarkers
 ```
 
-## Six concept axes
+## What's new in v2.0
 
-| Module | Direction | Key features |
-|--------|-----------|--------------|
-| `motif` | ① Antigen decoding | CDR3 3-mer spectrum, public-clonotype hit rate |
-| `diversity` | ② Repertoire statistics | Shannon, Simpson, clonality, power-law α |
-| `selection` | ③ Selection imprint | N-insertion proxy, charge, hydrophobicity, V/J KL |
-| `convergence` | ④ Disease perturbation | Gini, top-clone fraction, convergence index, collapse |
-| `shm` | ⑤ History & lineage | SHM burden proxy (BCR) |
-| `pairing` | ⑥ Chain pairing | Pairing diversity (single-cell) |
+### Chain selection (NEW)
 
-## Demo results (toy data, 4 disease groups)
+The unified entry point `run_CDRscope()` accepts a `chain` parameter with three modes:
 
-Disease separation in the concept-bottleneck space:
+| Mode | Description | Use case |
+|------|-------------|----------|
+| `"single"` | Analyse the most abundant chain | Quick screening, TRB-only |
+| `"paired"` | TRA+TRB joint analysis | Highest accuracy (93.0% on RA) |
+| `"all"` | All chains analysed jointly | Full multi-chain repertoire |
 
-![DimPlot](docs/figures/01_dimplot.png)
+The input data can be **single-chain** (TRA/TRB/TRG/TRD/IGH/IGK/IGL), **paired** (TRA+TRB), or **multi-chain** (up to 7 chains). CDRscope auto-detects available chains from file names.
 
-Feature on the concept space (convergence index):
+### Enhanced feature engineering (NEW)
 
-![FeaturePlot convergence](docs/figures/02_featureplot_convergence.png)
+v2.0 adds 5 RA-specific feature modules (45 new features) on top of the original 6 concept modules:
 
-Feature distributions by group:
+| Module | Features | What it captures |
+|--------|----------|-----------------|
+| **RA_ClonalExpansion** | 11 | D50/D20, Morisita, Berger-Parker, Pielou, Renyi entropy, HEC stats |
+| **RA_GeneUsage** | 8 | RA-associated V genes (TRBV25-1, etc.), J genes, V-J pairing |
+| **RA_Physicochemical** | 14 | CDR3 length moments, N-terminal AA composition, charge, hydrophobicity |
+| **RA_ConvergenceEnhanced** | 5 | Private clone ratio, shared clonotypes, between-group convergence |
+| **RA_MotifEnrichment** | 6 | 23 RA-associated CDR3 motifs from literature (Aterido 2024, JCI, ARD) |
 
-![VlnPlot shannon](docs/figures/04_vlnplot_shannon.png) ![VlnPlot convergence](docs/figures/05_vlnplot_convergence.png)
+**Performance improvement:** Enhanced features (65 total) improve RA classification accuracy from **70.2% → 81.2%** (+11.0%) on real data.
 
-SHAP / coefficient attribution to the disease class:
+### Advanced classifiers (NEW)
 
-![SHAPPlot](docs/figures/06_shapplot.png)
+| Classifier | Function | Best for |
+|------------|----------|----------|
+| GLM (original) | `DiseaseClassify()` | Baseline, interpretable |
+| L1-regularized LR | `ClassifyRegularized()` | Feature selection |
+| Random Forest | `ClassifyRandomForest()` | Heterogeneous data, feature importance |
+| XGBoost | `ClassifyXGBoost()` | Non-linear patterns |
+| Ensemble | `ClassifyEnsemble()` | Robust predictions |
+| Compare all | `CompareClassifiers()` | One-click benchmarking |
 
-Concept-feature heatmap:
+### ESM-2 embedding (NEW)
 
-![Heatmap](docs/figures/07_heatmap.png)
+Protein language model (ESM-2, 480-dim) embedding of CDR3 sequences, with parametric UMAP for 2D visualization. Python scripts in `inst/python/`.
 
-Enriched CDR3 motifs per disease group:
+### Benchmark results (272 RA samples, 104 Control + 168 RA Patient)
 
-![MotifLogo infection](docs/figures/08_motiflogo_infection.png) ![MotifLogo autoimmune](docs/figures/09_motiflogo_autoimmune.png)
-
-Marker tables: [`statistical_markers.csv`](docs/statistical_markers.csv) · [`sequence_markers_top100.csv`](docs/sequence_markers_top100.csv)
-
-Reproduce with `Rscript demo_analysis.R`.
+| Pipeline | Features | Accuracy | F1 |
+|----------|:---:|:---:|:---:|
+| Original CDRscope (TRB) | 20 | 70.2% | — |
+| Enhanced RF (TRB) | 65 | 81.2% | 0.831 |
+| Enhanced RF (TRA) | 32 | 76.9% | 0.826 |
+| **Enhanced RF (TRA+TRB)** | **71** | **93.0%** | **0.944** |
 
 ## Installation
 
 ```r
 # from local source
 install.packages("CDRscope", repos = NULL, type = "source")
+
+# from GitHub
+# remotes::install_github("tornado2047/CDRscope")
 ```
 
-Suggested packages unlock optional features: `httr` (online VDJdb fetch),
-`iml` (SHAP), `entropy` / `poweRlaw` (extra diversity), `umap`.
+Optional packages for advanced features: `randomForest`, `glmnet`, `xgboost` (classifiers), `iml` (SHAP), `umap`.
 
 ## Quick start
+
+### v2.0 unified entry (recommended)
 
 ```r
 library(CDRscope)
 
-obj <- fetch_toy_data()                      # toy repertoire (offline)
+# Single chain
+result <- run_CDRscope("path/to/RA_data", chain = "single")
+
+# TRA+TRB paired (best accuracy)
+result <- run_CDRscope("path/to/RA_data", chain = "paired",
+                        classifier = "rf", cv_folds = 5)
+
+# All chains, compare classifiers
+result <- run_CDRscope("path/to/RA_data", chain = "all",
+                        classifier = "compare")
+
+# View results
+print(result$cv_results)
+head(result$feature_importance)
+```
+
+### Classic piped workflow (still supported)
+
+```r
+obj <- fetch_toy_data()
 obj <- QCRepertoire(obj)
 obj <- NormalizeRepertoire(obj)
-obj <- ComputeFeatures(obj)
+obj <- ComputeFeatures(obj)           # 6 original modules (20 features)
+obj <- ComputeFeaturesRA(obj)         # +5 RA modules (65 features total)
 obj <- ConceptBottleneckEmbed(obj)
 obj <- DiseaseClassify(obj, use_shap = TRUE)
 obj <- FindMarkers(obj, level = "both")
 
-DimPlot(obj)              # disease separation in concept space
-SHAPPlot(obj)             # attribution to concept axes
-VlnPlot(obj, "shannon")   # feature by group
-head(obj@markers$statistical_sig)
-head(obj@markers$sequence_sig)
-```
-
-## Online data
-
-```r
-vdjdb <- fetch_vdjdb(species = "HomoSapiens", gene = "TRB", limit = 5000)
+DimPlot(obj)
+SHAPPlot(obj)
 ```
 
 ## Design notes
 
-- **Object**: `CDRobject` is an S4 class with slots `meta`, `clones`,
-  `features`, `feature_modules`, `embedding`, `reduction`, `classification`,
-  `markers`, `misc` — modelled after `Seurat`.
-- **Interpretability**: the concept-bottleneck layer forces every disease
-  decision through the six named modules; SHAP attributes decisions to axes.
-- **Markers**: statistical level (feature differences + FDR) localises the
-  perturbed mechanism; sequence level (motif enrichment + public disease
-  clonotypes) gives concrete CDR3 biomarkers.
+- **Object**: `CDRobject` is an S4 class with slots `meta`, `clones`, `features`, `feature_modules`, `embedding`, `reduction`, `classification`, `markers`, `misc` — modelled after `Seurat`.
+- **Interpretability**: the concept-bottleneck layer forces every disease decision through named modules; SHAP attributes decisions to axes.
+- **Markers**: statistical level (feature differences + FDR) and sequence level (motif enrichment + public disease clonotypes).
+- **Multi-chain**: the `chain` column in the clones table enables automatic chain detection and filtering.
 
-License: MIT
+## Roadmap
+
+### v2.x (near-term)
+- [ ] ROC/PR curves and AUC metrics
+- [ ] Bootstrap confidence intervals for feature importance
+- [ ] UMAP visualization with chain labeling
+- [ ] CRAN submission
+
+### v3.0 — scTCR-seq αβ pairing (future)
+Single-cell TCR sequencing data with paired TRA+TRB chains from the same T cell.
+- **αβ pairing analysis**: joint TRA CDR3 + TRB CDR3 embedding per cell
+- **Antigen recognition modules**: map complete TCRs (α+β) to 2D space
+- **scTCR-seq support**: `pair_id` column in clones table
+- **Clonotype-level analysis**: paired-chain convergence, selection, and motif co-occurrence
+
+See [ROADMAP.md](ROADMAP.md) for details.
+
+## License
+
+MIT
