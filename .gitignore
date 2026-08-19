@@ -13,3 +13,4 @@
 inst/doc
 vignettes/*.html
 vignettes/*.R
+inst/reference_map/ref_metadata.csv

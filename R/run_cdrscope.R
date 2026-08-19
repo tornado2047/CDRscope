@@ -168,6 +168,7 @@ run_CDRscope <- function(
     cv_details         = cv_results$details,
     feature_importance = importance,
     chain_info         = chain_info,
+    roc_data           = cv_results$roc_data,
     call               = match.call()
   )
 }
@@ -468,7 +469,7 @@ run_CDRscope <- function(
 }
 
 
-#' Simple Random Forest CV
+#' Random Forest CV with ROC/AUC
 #' @keywords internal
 .cv_random_forest <- function(X, y, folds, verbose) {
   if (!requireNamespace("randomForest", quietly = TRUE)) {
@@ -477,11 +478,18 @@ run_CDRscope <- function(
   n <- length(y)
   cv_idx <- sample(rep(seq_len(folds), length.out = n))
   accs <- numeric(folds)
-  f1s <- numeric(folds)
+  f1s  <- numeric(folds)
+  aucs <- numeric(folds)
+  auc_prs <- numeric(folds)
   imp_list <- list()
+  roc_per_fold <- list()
+  pooled_prob <- numeric(0)
+  pooled_true <- character(0)
+
+  positive_class <- levels(factor(y))[2]
 
   for (f in seq_len(folds)) {
-    test_idx <- which(cv_idx == f)
+    test_idx  <- which(cv_idx == f)
     train_idx <- setdiff(seq_len(n), test_idx)
 
     rf <- randomForest::randomForest(
@@ -489,18 +497,26 @@ run_CDRscope <- function(
       ntree = 500, importance = TRUE
     )
     pred <- predict(rf, X[test_idx, , drop = FALSE])
+    prob <- predict(rf, X[test_idx, , drop = FALSE], type = "prob")[, positive_class]
 
     accs[f] <- mean(pred == y[test_idx])
-    cm <- table(pred, y[test_idx])
-    if (nrow(cm) == 2 && ncol(cm) == 2) {
-      prec <- cm[2,2] / sum(cm[2,])
-      rec  <- cm[2,2] / sum(cm[,2])
-      f1s[f] <- 2 * prec * rec / (prec + rec)
-    } else {
-      f1s[f] <- accs[f]
-    }
+
+    # Compute all metrics including ROC/AUC
+    metrics <- .compute_all_metrics(y[test_idx], pred, prob, positive_class)
+    f1s[f]     <- metrics$f1
+    aucs[f]    <- metrics$auc
+    auc_prs[f] <- metrics$auc_pr
+
+    roc_per_fold[[f]] <- metrics$roc
+    pooled_prob <- c(pooled_prob, prob)
+    pooled_true <- c(pooled_true, as.character(y[test_idx]))
+
     imp_list[[f]] <- randomForest::importance(rf)[, "MeanDecreaseAccuracy"]
   }
+
+  # Pooled ROC
+  pooled_roc <- .compute_roc(pooled_true, pooled_prob, positive_class)
+  pooled_pr  <- .compute_pr(pooled_true, pooled_prob, positive_class)
 
   # Aggregate importance
   all_features <- sort(unique(unlist(lapply(imp_list, names))))
@@ -516,18 +532,32 @@ run_CDRscope <- function(
     cat(sprintf("  Accuracy: %.4f +/- %.4f\n", mean(accs), sd(accs)))
     cat(sprintf("  F1:       %.4f +/- %.4f\n", mean(f1s, na.rm = TRUE),
                 sd(f1s, na.rm = TRUE)))
+    cat(sprintf("  AUC-ROC:  %.4f +/- %.4f\n", mean(aucs), sd(aucs)))
+    cat(sprintf("  AUC-PR:   %.4f +/- %.4f\n", mean(auc_prs), sd(auc_prs)))
   }
 
   list(
     summary    = data.frame(
       accuracy_mean = mean(accs), accuracy_sd = sd(accs),
       f1_mean = mean(f1s, na.rm = TRUE), f1_sd = sd(f1s, na.rm = TRUE),
+      auc_mean = mean(aucs), auc_sd = sd(aucs),
+      auc_pr_mean = mean(auc_prs), auc_pr_sd = sd(auc_prs),
       n_features = ncol(X)
     ),
-    details    = data.frame(fold = seq_len(folds), accuracy = accs, f1 = f1s),
+    details    = data.frame(
+      fold = seq_len(folds), accuracy = accs, f1 = f1s,
+      auc = aucs, auc_pr = auc_prs
+    ),
     importance = data.frame(feature = names(imp_sorted),
                             importance = unname(imp_sorted),
-                            stringsAsFactors = FALSE)
+                            stringsAsFactors = FALSE),
+    roc_data   = list(
+      per_fold  = roc_per_fold,
+      pooled    = pooled_roc,
+      pooled_pr = pooled_pr,
+      mean_auc  = mean(aucs),
+      mean_auc_pr = mean(auc_prs)
+    )
   )
 }
 

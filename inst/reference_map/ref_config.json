@@ -1,0 +1,43 @@
+{
+  "name": "CDRscope Reference Map v1.0",
+  "description": "Fixed 2D reference map for TCR CDR3 sequence comparison",
+  "esm2_model": "facebook/esm2_t12_35M_UR50D",
+  "embedding_dim": 480,
+  "umap_params": {
+    "n_components": 2,
+    "n_neighbors": 30,
+    "min_dist": 0.1,
+    "metric": "cosine",
+    "random_state": 42
+  },
+  "nn_arch": {
+    "input_dim": 480,
+    "hidden_dims": [
+      256,
+      128,
+      64
+    ],
+    "output_dim": 2,
+    "activation": "relu",
+    "dropout": 0.1,
+    "batch_norm": true
+  },
+  "training": {
+    "fit_samples": 200000,
+    "epochs": 50,
+    "batch_size": 2048,
+    "lr": 0.001,
+    "loss": "MSE"
+  },
+  "n_sequences": 956377,
+  "n_tra": 462436,
+  "n_trb": 493941,
+  "chains": [
+    "TRA",
+    "TRB"
+  ],
+  "random_state": 42,
+  "version": "1.0.0",
+  "built_at": "2026-08-16 11:09:22",
+  "source": "Reused from CDRscope v2.0 RA analysis (956,377 sequences)"
+}

@@ -1,73 +1,92 @@
-# CDRscope v2.0
+# CDRscope v2.1
 
-**Interpretable TCR/BCR repertoire analysis with enhanced features, multi-chain support, and deep-learning embeddings.**
+**A complete closed-loop analysis framework for TCR/BCR immune repertoires —
+disease-agnostic, multi-chain, interpretable.**
 
-`CDRscope` implements the five-layer interpretable algorithm architecture for
-TCR/BCR immune repertoires. **v2.0** adds:
-- **Multi-chain support** — single chain, TRA+TRB paired, or all chains joint
-- **Enhanced feature engineering** — 11 modules, 65 features with RA-specific motifs
-- **Advanced classifiers** — Random Forest, LASSO, XGBoost, Ensemble
-- **ESM-2 embedding** — protein language model embedding + parametric UMAP
+`CDRscope` implements a 10-module closed-loop pipeline that takes raw repertoire
+data in and produces a full analysis report out — from feature engineering and
+classification to significance testing, breakthrough analysis, biological
+validation, and automated HTML report generation.
+
+> RA (rheumatoid arthritis) data was used as the validation use case during
+> development. The pipeline itself is **disease-agnostic**: point it at any
+> control-vs-patient repertoire dataset and it runs end-to-end.
 
 ```
-run_CDRscope(data_dir, chain = "paired")   # one-line unified entry
+run_complete_analysis(data_dir, chain = "paired")   # one-line closed loop
 
-# Or the classic piped workflow:
-ReadRepertoire → QCRepertoire → ComputeFeatures → ComputeFeaturesRA
-              → ConceptBottleneckEmbed → DiseaseClassify → FindMarkers
+# 10 modules:  Input → Features → ESM-2 → Reference Map → Classification
+#              → UMAP → Significance → Breakthrough → Validation → Report
 ```
 
-## What's new in v2.0
+## What's new in v2.1
 
-### Chain selection (NEW)
+### Complete closed-loop pipeline (NEW)
 
-The unified entry point `run_CDRscope()` accepts a `chain` parameter with three modes:
+A single orchestrator — `run_complete_analysis()` — runs all 10 modules in
+sequence and writes every output to a results directory:
+
+| # | Module | What it does | Key output |
+|---|--------|--------------|------------|
+| 1 | **Input & chain selection** | Auto-detect chains, load repertoire | `CDRobject` |
+| 2 | **Feature engineering** | 65 features across 11 modules | `feature_matrix.csv` |
+| 3 | **ESM-2 embedding** | 480-dim protein LM embeddings | `esm_embeddings.npy` |
+| 4 | **Reference Map projection** | Project onto fixed UMAP space | `projected_coords.csv` |
+| 5 | **Classification** | RF / LASSO / XGBoost / Ensemble + CV | `cv_results.csv` |
+| 6 | **UMAP visualization** | 2D map with property-domain coloring | `*.png` |
+| 7 | **Domain significance** | Fisher exact, OR, forest plots | `domain_significance.csv` |
+| 8 | **Breakthrough analysis** | Expansion, axis decode, disease score, network | `breakthrough_summary.json` |
+| 9 | **Biological validation** | Frequency redistribution, citrullination axis, HLA | `validation_summary.json` |
+| 10 | **Report generation** | Self-contained HTML report | `CDRscope_Analysis_Report.html` |
+
+Each module can be toggled on/off via parameters, so you can run only the
+modules you need.
+
+### Reference Map system (NEW)
+
+A **fixed UMAP space** built from a trained neural network (655 KB weights).
+Any new project's sequences can be projected onto the same 2D space, enabling
+**cross-project comparison** — different inputs, one common map.
+
+- `ProjectToReferenceMap()` — project new sequences onto the reference map
+- `ReferenceMapPlot()` — ggplot visualization with new data overlay
+- Reference map bundle shipped in `inst/reference_map/` (weights + metadata)
+
+### Multi-chain support (v2.0)
+
+Three chain modes, auto-detected from file names:
 
 | Mode | Description | Use case |
 |------|-------------|----------|
-| `"single"` | Analyse the most abundant chain | Quick screening, TRB-only |
-| `"paired"` | TRA+TRB joint analysis | Highest accuracy (93.0% on RA) |
-| `"all"` | All chains analysed jointly | Full multi-chain repertoire |
+| `"single"` | Analyse the most abundant chain | Quick screening, single-chain data |
+| `"paired"` | TRA+TRB joint analysis | Highest accuracy |
+| `"all"` | All chains analysed jointly | Full multi-chain repertoire (up to 7 chains) |
 
-The input data can be **single-chain** (TRA/TRB/TRG/TRD/IGH/IGK/IGL), **paired** (TRA+TRB), or **multi-chain** (up to 7 chains). CDRscope auto-detects available chains from file names.
+Supported chains: TRA, TRB, TRG, TRD, IGH, IGK, IGL.
 
-### Enhanced feature engineering (NEW)
+### Enhanced feature engineering (v2.0)
 
-v2.0 adds 5 RA-specific feature modules (45 new features) on top of the original 6 concept modules:
+65 features across 11 modules:
 
 | Module | Features | What it captures |
 |--------|----------|-----------------|
-| **RA_ClonalExpansion** | 11 | D50/D20, Morisita, Berger-Parker, Pielou, Renyi entropy, HEC stats |
-| **RA_GeneUsage** | 8 | RA-associated V genes (TRBV25-1, etc.), J genes, V-J pairing |
-| **RA_Physicochemical** | 14 | CDR3 length moments, N-terminal AA composition, charge, hydrophobicity |
-| **RA_ConvergenceEnhanced** | 5 | Private clone ratio, shared clonotypes, between-group convergence |
-| **RA_MotifEnrichment** | 6 | 23 RA-associated CDR3 motifs from literature (Aterido 2024, JCI, ARD) |
+| **6 original concept modules** | 20 | Diversity, motifs, selection, convergence, SHM, pairing |
+| **RA_ClonalExpansion** | 11 | D50/D20, Morisita, Berger-Parker, Pielou, Renyi |
+| **RA_GeneUsage** | 8 | V/J gene usage, V-J pairing |
+| **RA_Physicochemical** | 14 | CDR3 length, AA composition, charge, hydrophobicity |
+| **RA_ConvergenceEnhanced** | 5 | Private clone ratio, shared clonotypes |
+| **RA_MotifEnrichment** | 6 | Disease-associated CDR3 motifs |
 
-**Performance improvement:** Enhanced features (65 total) improve RA classification accuracy from **70.2% → 81.2%** (+11.0%) on real data.
-
-### Advanced classifiers (NEW)
+### Advanced classifiers (v2.0)
 
 | Classifier | Function | Best for |
 |------------|----------|----------|
 | GLM (original) | `DiseaseClassify()` | Baseline, interpretable |
-| L1-regularized LR | `ClassifyRegularized()` | Feature selection |
-| Random Forest | `ClassifyRandomForest()` | Heterogeneous data, feature importance |
+| L1/L2 regularized LR | `ClassifyRegularized()` | Feature selection |
+| Random Forest | `ClassifyRandomForest()` | Heterogeneous data |
 | XGBoost | `ClassifyXGBoost()` | Non-linear patterns |
 | Ensemble | `ClassifyEnsemble()` | Robust predictions |
 | Compare all | `CompareClassifiers()` | One-click benchmarking |
-
-### ESM-2 embedding (NEW)
-
-Protein language model (ESM-2, 480-dim) embedding of CDR3 sequences, with parametric UMAP for 2D visualization. Python scripts in `inst/python/`.
-
-### Benchmark results (272 RA samples, 104 Control + 168 RA Patient)
-
-| Pipeline | Features | Accuracy | F1 |
-|----------|:---:|:---:|:---:|
-| Original CDRscope (TRB) | 20 | 70.2% | — |
-| Enhanced RF (TRB) | 65 | 81.2% | 0.831 |
-| Enhanced RF (TRA) | 32 | 76.9% | 0.826 |
-| **Enhanced RF (TRA+TRB)** | **71** | **93.0%** | **0.944** |
 
 ## Installation
 
@@ -79,29 +98,76 @@ install.packages("CDRscope", repos = NULL, type = "source")
 # remotes::install_github("tornado2047/CDRscope")
 ```
 
-Optional packages for advanced features: `randomForest`, `glmnet`, `xgboost` (classifiers), `iml` (SHAP), `umap`.
+Python dependencies (for ESM-2 embedding, UMAP, deep analysis):
+`torch`, `esm`, `umap-learn`, `scikit-learn`, `pandas`, `matplotlib`.
+
+Optional R packages: `randomForest`, `glmnet`, `xgboost`, `iml`, `jsonlite`.
 
 ## Quick start
 
-### v2.0 unified entry (recommended)
+### v2.1 closed-loop pipeline (recommended)
 
 ```r
 library(CDRscope)
 
+# Full closed-loop — runs all 10 modules
+result <- run_complete_analysis(
+  input = "path/to/data",
+  chain = "paired",           # single / paired / all
+  control_dir = "path/to/controls",
+  patient_dir = "path/to/patients",
+  classifier = "rf",
+  cv_folds = 5,
+  output_dir = "my_analysis"
+)
+
+# Print summary
+print(result)
+# CDRscope Complete Analysis Results
+#   Chain mode:      paired
+#   Elapsed:         3.2 minutes
+#   CV accuracy:     93.0%
+#   Significance:    24 domain tests
+#   Report:          my_analysis/CDRscope_Analysis_Report.html
+
+# Open the HTML report
+browseURL(result$report_path)
+```
+
+### Toggle individual modules
+
+```r
+# Skip breakthrough + validation, only core + significance
+result <- run_complete_analysis(
+  input = "path/to/data",
+  chain = "single",
+  run_breakthrough = FALSE,
+  run_validation = FALSE,
+  generate_report = TRUE
+)
+
+# Project onto reference map only (no classification)
+result <- run_complete_analysis(
+  input = "path/to/data",
+  chain = "all",
+  use_reference_map = TRUE,
+  classifier = NULL
+)
+```
+
+### v2.0 unified entry (core pipeline only)
+
+```r
 # Single chain
-result <- run_CDRscope("path/to/RA_data", chain = "single")
+result <- run_CDRscope("path/to/data", chain = "single")
 
 # TRA+TRB paired (best accuracy)
-result <- run_CDRscope("path/to/RA_data", chain = "paired",
-                        classifier = "rf", cv_folds = 5)
+result <- run_CDRscope("path/to/data", chain = "paired",
+                       classifier = "rf", cv_folds = 5)
 
 # All chains, compare classifiers
-result <- run_CDRscope("path/to/RA_data", chain = "all",
-                        classifier = "compare")
-
-# View results
-print(result$cv_results)
-head(result$feature_importance)
+result <- run_CDRscope("path/to/data", chain = "all",
+                       classifier = "compare")
 ```
 
 ### Classic piped workflow (still supported)
@@ -111,7 +177,7 @@ obj <- fetch_toy_data()
 obj <- QCRepertoire(obj)
 obj <- NormalizeRepertoire(obj)
 obj <- ComputeFeatures(obj)           # 6 original modules (20 features)
-obj <- ComputeFeaturesRA(obj)         # +5 RA modules (65 features total)
+obj <- ComputeFeaturesRA(obj)         # +5 enhanced modules (65 features total)
 obj <- ConceptBottleneckEmbed(obj)
 obj <- DiseaseClassify(obj, use_shap = TRUE)
 obj <- FindMarkers(obj, level = "both")
@@ -120,28 +186,108 @@ DimPlot(obj)
 SHAPPlot(obj)
 ```
 
+## Pipeline architecture
+
+```
+                    ┌─────────────────────────────────────────────┐
+                    │           run_complete_analysis()           │
+                    └─────────────────────┬───────────────────────┘
+                                          │
+  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────────────┐
+  │ Module 1 │→ │ Module 2 │→ │ Module 3 │→ │   Module 4    │
+  │  Input   │  │ Features │  │  ESM-2   │  │ Reference Map │
+  │& chains  │  │  (65)    │  │ embed    │  │  projection   │
+  └──────────┘  └──────────┘  └──────────┘  └───────┬───────┘
+                                                    │
+  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌───────▼───────┐
+  │ Module 8 │← │ Module 7 │← │ Module 6 │← │   Module 5    │
+  │Breakthru │  │  Sig.    │  │  UMAP    │  │ Classification│
+  └────┬─────┘  └──────────┘  └──────────┘  └───────────────┘
+       │
+  ┌────▼─────┐  ┌──────────────────┐
+  │ Module 9 │→ │   Module 10      │
+  │Validate  │  │  HTML Report      │
+  └──────────┘  └──────────────────┘
+```
+
+### Module details
+
+**Module 7 — Domain significance**: Tests whether RA/control groups differ
+significantly across interpretable property domains (CDR3 length, net charge,
+hydrophobicity, aromatic content). Uses Fisher exact test with odds ratios
+and 95% CIs. Outputs forest plots.
+
+**Module 8 — Breakthrough analysis**:
+- *Expansion gradient*: clonal expansion differences (Mann-Whitney U)
+- *UMAP axis decoding*: Spearman correlation of UMAP axes with physicochemical properties
+- *Disease scoring*: sequence-level AUC (tests population vs sequence-level signal)
+- *Centroid shift*: spatial overlap of group distributions
+- *Sequence network*: Levenshtein distance similarity network
+
+**Module 9 — Biological validation**:
+- *Frequency redistribution*: per-domain RA/Control frequency ratios
+- *Citrullination-hydrophobicity axis*: chemical complementarity of disease CDR3s to modified autoantigens
+- *HLA stratification*: V gene proxy + motif restriction analysis
+
+## Validation: RA as a test case
+
+RA TCR repertoire data (104 control + 168 patient samples) was used to validate
+the pipeline. Key findings:
+
+| Finding | Evidence |
+|---------|----------|
+| Disease signal is **population-level** | Sequence-level AUC ≈ 0.51; sample-level classifier 93.0% |
+| UMAP2 encodes **hydrophobicity** | Spearman ρ = 0.72; RA shifts toward hydrophobic CDR3s |
+| **Citrullination axis** | RA hydrophobic CDR3s complement citrullinated autoantigens |
+| **HLA restriction** | HLA-DRB1*15:01 restricts QDFA motif TRB clones (OR ≈ 2.1) |
+| **Cross-cohort V genes** | TRAV20 RA-enriched, TRBV25 RA-depleted (2 independent cohorts) |
+
+These findings are specific to RA; the pipeline structure generalizes to any
+disease with control-vs-patient repertoire data.
+
+## Output files
+
+After `run_complete_analysis()`, the output directory contains:
+
+```
+output_dir/
+├── cv_results.csv              # Cross-validation metrics
+├── feature_importance.csv     # Top features
+├── projected_coords.csv       # Reference map coordinates
+├── domain_significance.csv    # Fisher exact test results
+├── breakthrough_summary.json  # Expansion, axis, disease score
+├── validation_summary.json    # Frequency, citrullination, HLA
+├── CDRscope_Analysis_Report.html  # Self-contained HTML report
+└── *.png                      # UMAP and forest plot images
+```
+
 ## Design notes
 
-- **Object**: `CDRobject` is an S4 class with slots `meta`, `clones`, `features`, `feature_modules`, `embedding`, `reduction`, `classification`, `markers`, `misc` — modelled after `Seurat`.
-- **Interpretability**: the concept-bottleneck layer forces every disease decision through named modules; SHAP attributes decisions to axes.
-- **Markers**: statistical level (feature differences + FDR) and sequence level (motif enrichment + public disease clonotypes).
-- **Multi-chain**: the `chain` column in the clones table enables automatic chain detection and filtering.
+- **Object**: `CDRobject` is an S4 class with slots `meta`, `clones`, `features`,
+  `feature_modules`, `embedding`, `reduction`, `classification`, `markers`,
+  `misc` — modelled after `Seurat`.
+- **Interpretability**: the concept-bottleneck layer forces every disease
+  decision through named modules; SHAP attributes decisions to axes.
+- **Reference map**: a trained NN approximates the UMAP transform, providing a
+  fixed coordinate space so different projects land on the same map.
+- **Disease-agnostic**: no RA-specific hard-coding in the pipeline; disease
+  knowledge lives in configurable feature modules and validation parameters.
 
 ## Roadmap
 
 ### v2.x (near-term)
+- [x] Complete closed-loop pipeline (10 modules)
+- [x] Reference map system
+- [x] Domain-level significance analysis
+- [x] Breakthrough analysis (expansion, axis, network)
+- [x] Biological validation (frequency, citrullination, HLA)
+- [x] Automated HTML report generation
 - [ ] ROC/PR curves and AUC metrics
 - [ ] Bootstrap confidence intervals for feature importance
-- [ ] UMAP visualization with chain labeling
 - [ ] CRAN submission
 
 ### v3.0 — scTCR-seq αβ pairing (future)
 Single-cell TCR sequencing data with paired TRA+TRB chains from the same T cell.
-- **αβ pairing analysis**: joint TRA CDR3 + TRB CDR3 embedding per cell
-- **Antigen recognition modules**: map complete TCRs (α+β) to 2D space
-- **scTCR-seq support**: `pair_id` column in clones table
-- **Clonotype-level analysis**: paired-chain convergence, selection, and motif co-occurrence
-
 See [ROADMAP.md](ROADMAP.md) for details.
 
 ## License
