@@ -273,6 +273,52 @@ output_dir/
 - **Disease-agnostic**: no RA-specific hard-coding in the pipeline; disease
   knowledge lives in configurable feature modules and validation parameters.
 
+## Tier 2: TCR Quantization Pipeline (NEW)
+
+Tier 2 converts variable CDR3 sequences into a fixed-dimensional "TCR
+transcriptome" space, enabling cross-sample comparison analogous to RNA-seq
+gene expression. This solves the fundamental AIRR-seq challenge: different
+samples have entirely different CDR3 sequences and counts.
+
+### Core idea
+
+1. **Reference pool** — 846k unique CDR3s from RA, CMV, MS, SLE, VDJdb
+2. **ESM-2 embedding** — 480-dim protein language model per sequence
+3. **K-means quantization** — m=10,000 prototype centroids ("TCR genes")
+4. **Sample projection** — any sample → nearest centroid → count vector (m-dim)
+5. **L2 normalization** — removes sequencing depth bias
+6. **Linear SVM** — optimal for sparse high-dim TCR data (AUC 0.9964)
+
+### Saturation validation
+
+m saturates as the reference pool grows: pool grew 20x, m grew only 3.8x
+(saturation index 0.45), confirming the TCR sequence space is finite.
+
+### Multi-layer interpretability
+
+| Layer | Method | Key finding (RA) |
+|-------|--------|-------------------|
+| SVM weight ranking | Top discriminative prototypes | Disease signal is distributed (GWAS-like) |
+| V/J gene enrichment | Aggregate gene usage in top prototypes | TRBV10-3 exclusively in patients |
+| CDR3 motif analysis | k-mer enrichment | GYEQ, SSIA, SSIV patient-specific |
+| Physicochemical | Biophysical properties | Significant charge/hydrophobicity shifts |
+| Convergence | V/J gene diversity per prototype | 1.2 vs 2.6 (antigen-driven selection) |
+
+### Tier 1 → Tier 2 integration
+
+Tier 1 trains on per-sample labeled data → model checkpoint.
+Tier 2 projects pool-only CDR3 data onto the reference panel → applies the
+Tier 1 model for disease scoring. This enables analysis of samples without
+individual-level information (e.g., CordBlood pooled data).
+
+See [`inst/python/tier2/README.md`](inst/python/tier2/README.md) for full
+documentation.
+
+```bash
+# Run full Tier 2 pipeline
+python inst/python/tier2/run_tier2.py --all
+```
+
 ## Roadmap
 
 ### v2.x (near-term)
@@ -282,6 +328,10 @@ output_dir/
 - [x] Breakthrough analysis (expansion, axis, network)
 - [x] Biological validation (frequency, citrullination, HLA)
 - [x] Automated HTML report generation
+- [x] **Tier 2: TCR quantization pipeline** (m=10,000, AUC 0.9964)
+- [x] **Saturation analysis** (m stabilizes as pool grows)
+- [x] **Multi-layer interpretability** (SVM weights, V/J genes, motifs, convergence)
+- [x] **Supervised visualization** (SVM projection, PLS-DA, LDA)
 - [ ] ROC/PR curves and AUC metrics
 - [ ] Bootstrap confidence intervals for feature importance
 - [ ] CRAN submission

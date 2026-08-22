@@ -11,6 +11,16 @@
 - [x] **Biological validation** — frequency redistribution, citrullination-hydrophobicity axis, HLA stratification
 - [x] **Automated HTML report generation** — self-contained report from all analysis outputs
 
+### Completed in v2.2 (Tier 2)
+
+- [x] **TCR reference quantization** — ESM-2 + k-means → m=10,000 prototype "TCR transcriptome"
+- [x] **Saturation analysis** — m stabilizes as pool grows (saturation index 0.45)
+- [x] **Unified pipeline** — L2 norm + Linear SVM, AUC 0.9964 on RA-TRB
+- [x] **Supervised visualization** — SVM 1D projection, SVM+PC 2D, PLS-DA, LDA, supervised UMAP
+- [x] **Multi-layer interpretability** — SVM weight ranking, V/J gene enrichment, CDR3 motif analysis, physicochemical profiling, convergence
+- [x] **FindMarkers** — Wilcoxon rank-sum, logFC, AUC per prototype, volcano plot, heatmap
+- [x] **Cross-disease benchmark** — RA, CMV, SLE, VDJdb multi-disease testing
+
 ## v2.x (near-term, 2026 Q3-Q4)
 
 - [ ] **ROC/PR curves** — AUC metrics for classifier evaluation
