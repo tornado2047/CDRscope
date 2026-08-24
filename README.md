@@ -332,8 +332,14 @@ python inst/python/tier2/run_tier2.py --all
 - [x] **Saturation analysis** (m stabilizes as pool grows)
 - [x] **Multi-layer interpretability** (SVM weights, V/J genes, motifs, convergence)
 - [x] **Supervised visualization** (SVM projection, PLS-DA, LDA)
-- [ ] ROC/PR curves and AUC metrics
+- [x] **Reference Coordinate System** (fixed CordBlood TRA space, unique sample positioning)
+- [x] **Deviation magnitude + direction** (7-view visualization, HTML/PDF report)
+- [x] **Unsupervised route** (deviation scoring, OCSVM+LOF+JS ensemble, AUC up to 0.95)
+- [x] **Longitudinal validation** (46 samples / 25 donors, intra < inter, p=3.9e-15)
+- [x] **Cross-disease panel testing** (SLE 0.9706, MS 0.7500, RA-TRA 0.7059)
+- [x] ROC/PR curves and AUC metrics
 - [ ] Bootstrap confidence intervals for feature importance
+- [ ] Remaining 6 chain-specific panels (TRB, TRG, TRD, IGH, IGL, IGK)
 - [ ] CRAN submission
 
 ### v3.0 — scTCR-seq αβ pairing (future)

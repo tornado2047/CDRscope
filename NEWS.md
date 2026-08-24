@@ -1,5 +1,49 @@
 # CDRscope NEWS
 
+## v2.3.0 (2026-08-24)
+
+### Reference Coordinate System (RCS) — the final unsupervised piece
+
+Completes the unsupervised route of Tier 2: a **fixed, invariant sample
+coordinate system** built once from CordBlood TRA, plus deviation
+magnitude/direction quantification and visualization.
+
+- **`reference_coordinate_system.py`** — fixed coordinate space built from
+  CordBlood TRA (1.32M unique CDR3s → m=10,000 prototypes). Frozen PCA (50 PCs)
+  + UMAP transformers; every new sample maps to a **unique, stable position**
+  (`same sample → same coordinates`; reference space never changes).
+- **`deviation_direction_viz.py`** — 7-view visualization of deviation
+  **magnitude** ("how far from the healthy origin?") and **direction**
+  ("which prototypes / PC axes drive it?"): PCA magnitude scatter, polar plot,
+  radar chart, top contributing prototypes, direction heatmap, direction
+  clusters, arrow field. Self-contained HTML + PDF report.
+- **`cdrscope_unified.py`** — single entry point with two routes:
+  - Route A (supervised, labels provided): Linear SVM 5-fold CV — AUC 0.9593,
+    differential prototypes, ROC analysis
+  - Route B (unsupervised, always runs): deviation magnitude scoring
+    (AUC 0.73), anomaly ensemble OCSVM+LOF+JS (AUC up to 0.95), diversity
+    analysis, composite stratification (High=54 / Moderate=82 / Normal=409 on RA)
+- **`longitudinal_validation_v2.py`** — robustness proof for the unsupervised
+  route: 46 samples from 25 donors (SLE GSE254176, Zenodo MDA1/HD1-3, RA
+  controls). Same-donor pairs are significantly closer than cross-donor pairs —
+  cosine 1.39× (p=3.9e-15), Euclidean 1.21× (p=3.9e-15), JS divergence 1.08×
+  (p=7.4e-7), RCS space 1.16× (p=1.5e-3).
+- **`unsupervised_tra_pipeline.py`**, **`unsupervised_enhanced.py`**,
+  **`unsupervised_methods_4_6.py`** — full unsupervised suite: KMeans/GMM
+  clustering, diversity (Shannon/Simpson/Pielou/Chao1), Isolation Forest,
+  One-Class SVM, LOF, JS divergence / Aitchison distance, multi-scale
+  prototype grouping, repertoire similarity networks.
+- **`cordblood_reference_panel.py`**, **`cordblood_tra_full11.py`**,
+  **`cordblood_tra_validate.py`** — CordBlood TRA chain-specific reference
+  panel (first of seven planned chains: TRA/TRB/TRG/TRD/IGH/IGL/IGK).
+- **`multidisease_tra_test.py`**, **`cross_disease_tier2.py`** — cross-disease
+  validation of the CB TRA panel: SLE AUC 0.9706, MS AUC 0.7500, RA-TRA 0.7059.
+
+**Key finding**: RA disease signal in TRA is **distributed** across many
+prototypes (GWAS-like); unsupervised clustering cannot separate disease from
+control (ARI −0.0076). Deviation-from-reference scoring is the correct
+unsupervised screening tool; supervised SVM remains strongest when labels exist.
+
 ## v2.1.1 (2026-08-17)
 
 ### ROC/AUC Metrics
