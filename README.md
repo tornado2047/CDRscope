@@ -1,4 +1,10 @@
-# CDRscope v2.1
+# CDRscope v2.3
+
+> **Canonical evaluation upgrade:** new confirmatory analyses should use the leakage-aware
+> v2.4 core documented in [`docs/SYSTEM_OPTIMIZATION.md`](docs/SYSTEM_OPTIMIZATION.md).
+> It adds donor-grouped nested CV, frozen-panel independence checks, AIRR/QC validation,
+> soft multiscale spectra, healthy-only calibrated anomaly scoring, and reproducible run manifests.
+
 
 **A complete closed-loop analysis framework for TCR/BCR immune repertoires —
 disease-agnostic, multi-chain, interpretable.**

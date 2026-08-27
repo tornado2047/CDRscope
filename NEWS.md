@@ -1,5 +1,22 @@
 # CDRscope NEWS
 
+## v2.4.0 (2026-08-27)
+
+### Canonical leakage-aware analysis core
+
+- AIRR-compatible validation and quantitative sample QC.
+- Donor/technical-replicate grouping and grouped nested cross-validation.
+- Elastic-net model selection inside inner folds, out-of-fold probability metrics,
+  donor-bootstrap confidence intervals and Brier score.
+- Hard/soft prototype assignment, compositional normalization and multiscale spectra.
+- Healthy-reference-only anomaly fitting with held-out calibration and conformal p-values.
+- Versioned panel manifests, independence checks, embedding cache and run provenance.
+- Canonical CLI/config plus Python regression tests; see `docs/SYSTEM_OPTIMIZATION.md`.
+
+Historical v2.1-v2.3 scripts remain available for reproducibility but their random
+sample-level CV results should be treated as exploratory until rerun through v2.4.
+
+
 ## v2.3.0 (2026-08-24)
 
 ### Reference Coordinate System (RCS) — the final unsupervised piece

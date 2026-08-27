@@ -2,8 +2,8 @@ Package: CDRscope
 Type: Package
 Title: Interpretable TCR/BCR Repertoire Analysis with Enhanced Features and
     Multi-Chain Support
-Version: 2.1.0
-Date: 2026-08-16
+Version: 2.4.0
+Date: 2026-08-27
 Authors@R: person("CDRscope", "Author", email = "cdrscope@example.com", role = c("aut", "cre"))
 Author: CDRscope Author
 Maintainer: CDRscope Author <cdrscope@example.com>

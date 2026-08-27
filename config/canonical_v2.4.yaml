@@ -1,0 +1,44 @@
+# CDRscope canonical v2.4 configuration
+seed: 42
+input:
+  format: AIRR
+  sample_id: sample_id
+  donor_id: donor_id
+  sequence_aa: cdr3_aa
+  chain: chain
+  count: count
+  productive: productive
+  v_gene: v_gene
+  j_gene: j_gene
+qc:
+  min_unique_cdr3: 300
+  min_total_count: 1000
+  min_productive_fraction: 0.80
+  min_cdr3_length: 5
+  max_cdr3_length: 40
+panel:
+  policy: fixed_external
+  require_independence_check: true
+spectrum:
+  assignment: soft
+  top_k: 5
+  temperature: 0.2
+  normalization: hellinger
+  scales: [500, 2000, 10000]
+validation:
+  split_unit: donor_id
+  outer_folds: 5
+  inner_folds: 4
+  repeats: 3
+  bootstrap: 1000
+  model: elastic_net_logistic
+  scoring: roc_auc
+anomaly:
+  reference_only_fit: true
+  calibration_fraction: 0.25
+  n_components: 30
+  nu: 0.10
+reporting:
+  metrics: [auc_roc, auc_pr, brier, balanced_accuracy, f1, mcc, sensitivity, specificity]
+  save_out_of_fold_predictions: true
+  save_run_manifest: true
