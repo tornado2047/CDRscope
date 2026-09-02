@@ -451,12 +451,8 @@ def project_sample_to_panel(sequences, counts, centroids):
     # For efficiency, we batch this
     embeddings = compute_esm2_embeddings(sequences)
 
-    # Assign each to nearest centroid
-    # Vectorized: compute all pairwise distances at once
-    # (n_seq, 1, k) - (1, m, k) → (n_seq, m, k) → sum over k → (n_seq, m)
-    diff = embeddings[:, np.newaxis, :] - centroids[np.newaxis, :, :]
-    dists = np.sum(diff ** 2, axis=2)  # (n_seq, m)
-    assignments = np.argmin(dists, axis=1)  # (n_seq,)
+    # Assign each to nearest centroid (memory-efficient via cdist)
+    assignments = assign_to_centroids(embeddings, centroids, batch_size=5000)
 
     # Aggregate counts
     counts_arr = np.array(counts, dtype=np.float32)
@@ -477,15 +473,13 @@ def assign_to_centroids(embeddings, centroids, batch_size=10000):
     Returns:
         assignments: (n_seq,) array of centroid indices
     """
+    from scipy.spatial.distance import cdist as _cdist
     n = embeddings.shape[0]
-    m = centroids.shape[0]
     assignments = np.zeros(n, dtype=np.int32)
 
     for i in range(0, n, batch_size):
         batch = embeddings[i:i+batch_size]
-        # (batch, 1, k) - (1, m, k) → (batch, m, k) → sum → (batch, m)
-        diff = batch[:, np.newaxis, :] - centroids[np.newaxis, :, :]
-        dists = np.sum(diff ** 2, axis=2)
+        dists = _cdist(batch, centroids, metric='sqeuclidean')
         assignments[i:i+batch_size] = np.argmin(dists, axis=1)
 
     return assignments
